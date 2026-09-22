@@ -7,7 +7,7 @@ use std::thread;
 use tempfile::tempdir;
 
 fn binary() -> Command {
-    Command::new(env!("CARGO_BIN_EXE_shirone-content"))
+    Command::new(env!("CARGO_BIN_EXE_shrncnt"))
 }
 
 fn project() -> tempfile::TempDir {
@@ -198,6 +198,145 @@ fn downloads_and_converts_cover_to_webp() {
             .unwrap()
             .contains("image: ./cover.webp")
     );
+}
+
+#[test]
+fn retries_transient_cover_statuses() {
+    let dir = project();
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let address = listener.local_addr().unwrap();
+    let mut png = Cursor::new(Vec::new());
+    DynamicImage::ImageRgb8(RgbImage::from_pixel(2, 2, image::Rgb([0, 255, 0])))
+        .write_to(&mut png, ImageFormat::Png)
+        .unwrap();
+    let bytes = png.into_inner();
+    let server = thread::spawn(move || {
+        for attempt in 0..3 {
+            let (mut stream, _) = listener.accept().unwrap();
+            let mut request = [0_u8; 1024];
+            let _ = stream.read(&mut request);
+            if attempt < 2 {
+                write!(
+                    stream,
+                    "HTTP/1.1 503 Service Unavailable\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+                )
+                .unwrap();
+            } else {
+                write!(
+                    stream,
+                    "HTTP/1.1 200 OK\r\nContent-Type: image/png\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+                    bytes.len()
+                )
+                .unwrap();
+                stream.write_all(&bytes).unwrap();
+            }
+        }
+    });
+    let output = binary()
+        .current_dir(dir.path())
+        .args([
+            "create",
+            "retry-cover",
+            "--cover-url",
+            &format!("http://{address}/cover"),
+        ])
+        .output()
+        .unwrap();
+    server.join().unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        dir.path()
+            .join("content/posts/retry-cover/cover.webp")
+            .is_file()
+    );
+}
+
+#[test]
+fn follows_cover_redirects() {
+    let dir = project();
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let address = listener.local_addr().unwrap();
+    let mut png = Cursor::new(Vec::new());
+    DynamicImage::ImageRgb8(RgbImage::from_pixel(2, 2, image::Rgb([0, 0, 255])))
+        .write_to(&mut png, ImageFormat::Png)
+        .unwrap();
+    let bytes = png.into_inner();
+    let server = thread::spawn(move || {
+        let (mut redirect, _) = listener.accept().unwrap();
+        let mut request = [0_u8; 1024];
+        let _ = redirect.read(&mut request);
+        write!(
+            redirect,
+            "HTTP/1.1 302 Found\r\nLocation: http://{address}/image\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+        )
+        .unwrap();
+
+        let (mut image, _) = listener.accept().unwrap();
+        let _ = image.read(&mut request);
+        write!(
+            image,
+            "HTTP/1.1 200 OK\r\nContent-Type: image/png\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+            bytes.len()
+        )
+        .unwrap();
+        image.write_all(&bytes).unwrap();
+    });
+    let output = binary()
+        .current_dir(dir.path())
+        .args([
+            "create",
+            "redirect-cover",
+            "--cover-url",
+            &format!("http://{address}/random"),
+        ])
+        .output()
+        .unwrap();
+    server.join().unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        dir.path()
+            .join("content/posts/redirect-cover/cover.webp")
+            .is_file()
+    );
+}
+
+#[test]
+fn rejects_oversized_cover_before_writing_files() {
+    let dir = project();
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let address = listener.local_addr().unwrap();
+    let server = thread::spawn(move || {
+        let (mut stream, _) = listener.accept().unwrap();
+        let mut request = [0_u8; 1024];
+        let _ = stream.read(&mut request);
+        write!(
+            stream,
+            "HTTP/1.1 200 OK\r\nContent-Type: image/png\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+            20 * 1024 * 1024 + 1
+        )
+        .unwrap();
+    });
+    let output = binary()
+        .current_dir(dir.path())
+        .args([
+            "create",
+            "oversized-cover",
+            "--cover-url",
+            &format!("http://{address}/cover"),
+        ])
+        .output()
+        .unwrap();
+    server.join().unwrap();
+    assert!(!output.status.success());
+    assert!(!dir.path().join("content/posts/oversized-cover").exists());
 }
 
 #[test]

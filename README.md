@@ -1,4 +1,4 @@
-# Shirone Content CLI
+# shrncnt CLI
 
 一个独立的 Rust 命令行工具，用于按 Shirone 项目约定创建模板文章。工具读取项目配置和用户模板，创建 `<slug>/index.md`，可选下载并转换头图为 `<slug>/cover.webp`，并在文章写入后按配置询问是否打开编辑器。
 
@@ -35,7 +35,7 @@ cargo run -- new-post guides/rust-cli
 默认情况下，工具把当前目录作为项目根目录，并读取 `<root>/config.toml`。也可以显式指定：
 
 ```powershell
-shirone-content --root C:\work\shirone --config config.local.toml create notes/rust
+shrncnt --root C:\work\shirone --config config.local.toml create notes/rust
 ```
 
 路径规则如下：
@@ -147,6 +147,8 @@ wait = false
 
 启用封面时必须提供非空的 endpoint 或 `--cover-url`。下载内容会转换为 WebP，并写入 `<slug>/<cover.filename>`；文章中的图片值为 `./<cover.filename>`。
 
+随机图请求在一次 `create` 流程中复用 HTTP Client，自动跟随 302 跳转，并对连接超时、连接失败、408、429 和 5xx 响应最多尝试 3 次，退避时间约为 200ms 和 500ms。响应体在读取前后均限制为 20 MiB，超过限制或无法解码为图片时本次创建直接失败，不会写入文章或头图文件。当前 endpoint 仍要求直接返回图片（可经过 302 跳转）；JSON 图片 URL 和本地缓存暂不参与解析。
+
 #### `[editor]`
 
 | 字段 | 作用 | 默认值 |
@@ -192,7 +194,7 @@ wait = false
 基本命令：
 
 ```text
-shirone-content create <slug> [options]
+shrncnt create <slug> [options]
 ```
 
 常用选项：
@@ -210,10 +212,10 @@ shirone-content create <slug> [options]
 例如：
 
 ```powershell
-shirone-content --root . create notes/rust --title "Rust Notes" --tags rust,cli
-shirone-content create "mathematical induction" --title "【考研篇|数学】数学归纳法"
-shirone-content create photo --cover --cover-url "https://example.test/random"
-shirone-content create preview --dry-run
+shrncnt --root . create notes/rust --title "Rust Notes" --tags rust,cli
+shrncnt create "mathematical induction" --title "【考研篇|数学】数学归纳法"
+shrncnt create photo --cover --cover-url "https://example.test/random"
+shrncnt create preview --dry-run
 ```
 
 `slug` 只能接收一个命令行参数；slug 含空格时必须用引号包住。未加引号的 `mathematical induction` 会被 shell 解析成两个参数。
@@ -254,7 +256,7 @@ command = 'C:\Users\name\AppData\Local\Programs\Microsoft VS Code\bin\code.cmd -
 查看完整参数：
 
 ```powershell
-shirone-content create --help
+shrncnt create --help
 ```
 
 ## 模板变量
@@ -284,10 +286,10 @@ shirone-content create --help
 以下入口已集成 CLI，但当前只返回预留状态，便于后续扩展：
 
 ```text
-shirone-content update <slug>
-shirone-content validate
-shirone-content publish
-shirone-content content status|sync|watch|clean|export|eject|validate
+shrncnt update <slug>
+shrncnt validate
+shrncnt publish
+shrncnt content status|sync|watch|clean|export|eject|validate
 ```
 
 Git 推送、内容仓同步、更新、校验和发布流程暂不执行实际操作。
@@ -357,7 +359,7 @@ lang: {{ lang_yaml }}
 命令：
 
 ```powershell
-.\shirone-content.exe create "Data-Structures-Introduction" --title "【考研篇|数据结构】绪论"
+.\shrncnt.exe create "Data-Structures-Introduction" --title "【考研篇|数据结构】绪论"
 ```
 
 ![image-20260922201218483](assets/image-20260922201218483.png)

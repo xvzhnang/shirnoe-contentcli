@@ -1,4 +1,4 @@
-# Shirone CLI TODO
+# shrncnt CLI TODO
 
 ## 第一阶段：模板文章创建（已完成）
 

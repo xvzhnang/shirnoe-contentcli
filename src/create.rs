@@ -74,10 +74,8 @@ pub fn run(root: &Path, config: &Config, args: &CreateArgs) -> Result<(), AppErr
         ));
     }
     let cover_bytes = if should_cover {
-        Some(cover::download_webp(
-            cover_url.as_deref().unwrap(),
-            &config.cover,
-        )?)
+        let downloader = cover::CoverDownloader::new(&config.cover)?;
+        Some(downloader.download_webp(cover_url.as_deref().unwrap())?)
     } else {
         None
     };

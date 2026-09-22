@@ -3,16 +3,16 @@ use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
 #[command(
-    name = "shirone",
+    name = "shrncnt",
     version,
-    about = "Template-driven content CLI for Shirone"
+    about = "Template-driven content CLI for shrncnt"
 )]
 pub struct Cli {
     #[arg(
         long,
         global = true,
         default_value = ".",
-        help = "Shirone project root"
+        help = "shrncnt project root"
     )]
     pub root: PathBuf,
     #[arg(
