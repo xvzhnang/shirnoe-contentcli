@@ -2,6 +2,8 @@
 
 一个独立的 Rust 命令行工具，用于按 Shirone 项目约定创建模板文章。工具读取项目配置和用户模板，创建 `<slug>/index.md`，可选下载并转换头图为 `<slug>/cover.webp`，并在文章写入后按配置询问是否打开编辑器。
 
+本项目依托[LyraVoid/Shirone: An expressive, anime-inspired blog theme built on Material 3 Expressive, Astro 7, and Svelte 5](https://github.com/LyraVoid/Shirone)，官方文档：[主题介绍 | 文档 | Shirone Docs](https://docs.shirone.mysqil.com/guide/intro/)
+
 ## 当前状态
 
 第一阶段已达到可用于生产项目的文章创建能力：
