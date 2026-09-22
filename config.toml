@@ -1,0 +1,26 @@
+[project]
+content_dir = "C:/Users/xvzhang/Workspace/notes/Shirone/Shirone-Content/content/posts"
+template = "templates/post.md"
+filename = "index.md"
+timezone = "Asia/Shanghai"
+
+[defaults]
+draft = false
+comment = true
+description = ""
+category = ""
+tags = []
+
+[cover]
+enabled = true
+endpoint = "https://api.yppp.net/api.php"
+timeout_seconds = 20
+filename = "cover.webp"
+
+[editor]
+# Set enabled = true to prompt before opening every newly-created article.
+# Use {file} to control the file argument; otherwise open_file controls it.
+enabled = true
+command = "code.cmd --reuse-window"
+open_file = true
+wait = false
