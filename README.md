@@ -362,8 +362,10 @@ lang: {{ lang_yaml }}
 .\shrncnt.exe create "Data-Structures-Introduction" --title "【考研篇|数据结构】绪论"
 ```
 
-![image-20260922201218483](assets/image-20260922201218483.png)
+![image-20260922205654152](assets/image-20260922205654152.png)
 
 ![image-20260922201244509](assets/image-20260922201244509.png)
+
+![image-20260922205712244](assets/image-20260922205712244.png)
 
 ![image-20260922201305627](assets/image-20260922201305627.png)
