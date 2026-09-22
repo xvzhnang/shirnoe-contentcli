@@ -21,6 +21,8 @@ filename = "cover.webp"
 # Set enabled = true to prompt before opening every newly-created article.
 # Use {file} to control the file argument; otherwise open_file controls it.
 enabled = true
-command = "code.cmd --reuse-window"
+command = "cmd /c codex --reuse-window"
+# Typora
+# command = "cmd /c 'C:/Program Files/Typora/Typora.exe' --reuse-window"
 open_file = true
 wait = false
